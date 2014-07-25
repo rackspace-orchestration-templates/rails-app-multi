@@ -1,0 +1,420 @@
+heat_template_version: 2013-05-23
+
+description: |
+  This is a Heat template to deploy a single Linux server running a rails
+  application deployed from a git repo
+
+parameter_groups:
+
+- label: Server Settings
+  parameters:
+  - flavor
+  - image
+
+- label: Database Server Settings
+  parameters:
+  - db_flavor
+  - database_name
+  - database_username
+
+- label: Rails Settings
+  parameters:
+  - domain
+  - additional_packages
+  - ruby_version
+  - rails_environment
+  - rails_db_type
+  - rails_rake_tasks
+  - app_git_url
+  - app_git_revision
+  - app_git_deploy_key
+
+- label: rax-dev-params
+  # These are parameters that will not be displayed in the portal. The purpose
+  # of these parameters are for users who are developing or testing newer or
+  # different setups. If any of these parameters are changed, there is a good
+  # chance this stack will fail to properly deploy.
+  parameters:
+  - server_hostnames
+  - load_balancer_hostname
+  - kitchen
+  - chef_version
+  - rails_db_adapter
+  - child_template
+
+parameters:
+  server_hostnames:
+    label: Server Hostnames
+    description: Defines how the server will be named.
+    type: string
+    default: 'rails-%index%'
+
+  image:
+    label: Operating System
+    description: |
+      Server image used for all servers that are created as a part of this
+      deployment
+    type: string
+    default: Ubuntu 12.04 LTS (Precise Pangolin)
+    constraints:
+    - allowed_values:
+      - Ubuntu 12.04 LTS (Precise Pangolin)
+      description: Must be a supported operating system.
+
+  flavor:
+    label: Server Size
+    description: |
+      Rackspace Cloud Server flavor to use. The size is based on the amount of
+      RAM for the provisioned server.
+    type: string
+    default: 4 GB Performance
+    constraints:
+    - allowed_values:
+      - 1 GB Performance
+      - 2 GB Performance
+      - 4 GB Performance
+      - 8 GB Performance
+      - 15 GB Performance
+      - 30 GB Performance
+      - 1GB Standard Instance
+      - 2GB Standard Instance
+      - 4GB Standard Instance
+      - 8GB Standard Instance
+      - 15GB Standard Instance
+      - 30GB Standard Instance
+      description: |
+        Must be a valid Rackspace Cloud Server flavor for the region you have
+        selected to deploy into.
+
+  db_flavor:
+    label: Server Size
+    description: |
+      Rackspace Cloud Server flavor to use. The size is based on the amount of
+      RAM for the provisioned server.
+    type: string
+    default: 4 GB Performance
+    constraints:
+    - allowed_values:
+      - 1 GB Performance
+      - 2 GB Performance
+      - 4 GB Performance
+      - 8 GB Performance
+      - 15 GB Performance
+      - 30 GB Performance
+      - 1GB Standard Instance
+      - 2GB Standard Instance
+      - 4GB Standard Instance
+      - 8GB Standard Instance
+      - 15GB Standard Instance
+      - 30GB Standard Instance
+      description: |
+        Must be a valid Rackspace Cloud Server flavor for the region you have
+        selected to deploy into.
+
+  additional_packages:
+    label: Additional Packages
+    description: |
+      A space-delimited list of Linux packages required to build the Gems
+      your application needs. Many commonly required packages are installed
+      by default, but you should list any you need here to ensure they are
+      present.
+    type: string
+    default: mysql-devel
+
+  # Rails deployment
+  domain:
+    label: Site Domain
+    description: Domain to be used with the rails app site
+    type: string
+    default: "rails.example.com"
+    constraints:
+    - allowed_pattern: "^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$"
+      description: Must be a valid domain name
+
+  ruby_version:
+    label: Ruby Version
+    description: Ruby version to be installed
+    type: string
+    default: 2.1.2
+    constraints:
+    - allowed_values:
+      - 2.1.2
+      - 2.0.0-p481
+      - 1.9.3-p547
+
+  rails_environment:
+    label: Rails Environment
+    description: Rails environment in which to deploy and run the application
+    type: string
+    default: production
+
+  rails_db_type:
+    label: Database Type
+    description: The database server to be installed and configured
+    type: string
+    default: 'mysql'
+    constraints:
+      - allowed_values:
+        - mysql
+        - postgresql
+
+  rails_db_adapter:
+    label: Rails database adapter override
+    description: |
+      The Rails database adapter type to use if not mysql or postgresql
+    type: string
+    default: ''
+
+  rails_rake_tasks:
+    label: rake tasks to run at deploy
+    description: A space delimited list of rake tasks to run at deploy time
+    type: string
+    default: ''
+
+  rails_app_server:
+    label: Application Server
+    description: Application server to host your Rails application
+    type: string
+    default: unicorn
+    constraints:
+      - allowed_values:
+        - unicorn
+        - passenger
+
+  rails_app_server_count:
+    label: Number of Servers
+    description: The number of Rails application servers to build.
+    type: number
+    default: 2
+
+  app_git_url:
+    label: Git URL
+    description: A git URL pointing to a repo containing your Rails application
+    type: string
+    default: ''
+
+  app_git_revision:
+    label: Git Revision
+    description: Git branch, tag, or commit hash to deploy.
+    type: string
+    default: master
+
+  app_git_deploy_key:
+    label: Git Deploy Key
+    description: |
+      Optional: A deploy key is only necessary if your git repository is
+      private.
+    type: string
+    default: ''
+
+  # Database and system user configuration
+  database_name:
+    label: Database Name
+    description: Rails application database name
+    type: string
+    default: railsapp_db
+    constraints:
+    - allowed_pattern: "^[0-9a-zA-Z$_]{1,64}$"
+      description: |
+        Maximum length of 64 characters, may only contain letters, numbers, and
+        underscores.
+
+  database_username:
+    label: Database Username
+    description: Database login for your Rails application
+    type: string
+    default: railsapp_user
+    constraints:
+    - allowed_pattern: "^(.){1,16}$"
+      description: |
+        Must be shorter than 16 characters, this is due to MySQL's maximum
+        username length.
+
+  child_template:
+    label: Child Template
+    description: |
+      Location of the child template to use for the Rails application servers
+    type: string
+    default: https://raw.githubusercontent.com/rackspace-orchestration-templates/rails-app-multi/master/rails-app-server.yaml
+
+  kitchen:
+    description: "URL for a git repo containing required cookbooks"
+    type: string
+    default: https://github.com/rackspace-orchestration-templates/rails-app-multi
+
+  chef_version:
+    description: Version of chef client to use
+    type: string
+    default: 11.12.8
+
+  load_balancer_hostname:
+    label: Load Balancer Hostname
+    description: Hostname for the Cloud Load Balancer
+    type: string
+    default: Rails-app-load-balancer
+    constraints:
+    - length:
+        min: 1
+        max: 64
+    - allowed_pattern: "^[a-zA-Z][a-zA-Z0-9-]*$"
+      description: |
+        Must begin with a letter and contain only alphanumeric characters.
+
+
+resources:
+  # Random password generation
+  database_user_password:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 16
+      sequence: lettersdigits
+
+  db_admin_password:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 16
+      sequence: lettersdigits
+
+  mysql_repl_password:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 16
+      sequence: lettersdigits
+
+  mysql_debian_password:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 16
+      sequence: lettersdigits
+
+  rails_secret_key_base:
+    type: "OS::Heat::RandomString"
+    properties:
+      length: 64
+      sequence: hexdigits
+
+  # SSH key
+  ssh_key:
+    type: "OS::Nova::KeyPair"
+    properties:
+      name: { get_param: "OS::stack_id" }
+      save_private_key: true
+
+  # Server resources
+
+  load_balancer:
+    type: "Rackspace::Cloud::LoadBalancer"
+    depends_on: rails_app_servers
+    properties:
+      name: { get_param: load_balancer_hostname }
+      nodes:
+      - addresses: { get_attr: [rails_app_servers, privateIPv4] }
+        port: 80
+        condition: ENABLED
+      port: 80
+      protocol: HTTP
+      algorithm: ROUND_ROBIN
+      contentCaching: DISABLED
+      virtualIps:
+      - type: PUBLIC
+        ipVersion: IPV4
+      metadata:
+        rax-heat: { get_param: "OS::stack_id" }
+
+  rails_db_server:
+    type: "Rackspace::Cloud::Server"
+    properties:
+      name: railsdb
+      flavor: { get_param: db_flavor }
+      image: { get_param: image }
+      key_name: { get_resource: ssh_key }
+      metadata:
+        rax-heat: { get_param: "OS::stack_id" }
+
+  rails_db_server_setup:
+    type: "OS::Heat::ChefSolo"
+    depends_on: rails_db_server
+    properties:
+      username: root
+      private_key: { get_attr: [ssh_key, private_key] }
+      host: { get_attr: [rails_db_server, accessIPv4] }
+      kitchen: { get_param: kitchen }
+      chef_version: { get_param: chef_version }
+      node:
+        railsstack:
+          git_url: { get_param: app_git_url }
+          db:
+            type: { get_param: rails_db_type }
+            user_id: { get_param: database_username }
+            user_password: { get_resource: database_user_password }
+        mysql:
+          bind_address: { get_attr: [rails_db_server, privateIPv4] }
+          server_root_password: { get_attr: [db_admin_password, value] }
+          server_repl_password: { get_attr: [mysql_repl_password, value] }
+          server_debian_password: { get_attr: [mysql_debian_password, value] }
+          remove_test_database: true
+          remove_anonymous_users: true
+        postgresql:
+          config:
+            listen_addresses: '*'
+          password:
+            postgres: { get_attr: [db_admin_password, value] }
+        build-essential:
+          compile_time: true
+        run_list: ["recipe[apt]",
+                   "recipe[rax-rails-app::db_setup]"]
+
+  rails_app_servers:
+    type: "OS::Heat::ResourceGroup"
+    depends_on: rails_db_server_setup
+    properties:
+      count: { get_param: rails_app_server_count }
+      resource_def:
+        type: { get_param: child_template }
+        properties:
+          hostname: { get_param: server_hostnames }
+          ssh_key_name: { get_resource: ssh_key }
+          ssh_private_key: { get_attr: [ssh_key, private_key] }
+          kitchen: { get_param: kitchen }
+          chef_version: { get_param: chef_version }
+          rails_app_server: { get_param: rails_app_server}
+          ruby_version: { get_param: ruby_version }
+          app_git_url: { get_param: app_git_url }
+          app_git_revision: { get_param: app_git_revision }
+          app_git_deploy_key: { get_param: app_git_deploy_key }
+          rails_db_type: { get_param: rails_db_type }
+          rails_db_server_ip: { get_attr: [rails_db_server, privateIPv4] }
+          database_username: { get_param: database_username }
+          database_user_password: { get_resource: database_user_password }
+          rails_db_adapter: { get_param: rails_db_adapter }
+          rails_rake_tasks: { get_param: rails_rake_tasks }
+          rails_secret_key_base: { get_attr: [rails_secret_key_base, value] }
+
+outputs:
+  private_key:
+    value: { get_attr: [ssh_key, private_key] }
+    description: "SSH Private Key"
+
+  server_public_ips:
+    value: { get_attr: [rails_app_servers, accessIPv4] }
+    description: "Server IPs"
+
+  database_server_ip:
+    value: { get_attr: [rails_db_server, accessIPv4] }
+    description: "Database Server IP"
+
+  load_balancer_ip:
+    value: { get_attr: [load_balancer, PublicIp] }
+    description: Load Balancer IP
+
+  db_admin_password:
+    value: { get_attr: [db_admin_password, value] }
+    description: Database Admin Password
+
+  rails_app_url:
+    value:
+      str_replace:
+        template: "http://%lb_ip%"
+        params:
+          "%lb_ip%": { get_attr: [load_balancer, PublicIp] }
+    description: Application URL

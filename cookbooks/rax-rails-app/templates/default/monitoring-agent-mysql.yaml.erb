@@ -1,0 +1,14 @@
+# CHEF MANAGED FILE: DO NOT EDIT
+# Controlling Cookbook: <%= @cookbook_name %>
+#
+
+type: agent.mysql
+label: Local MYSQL check on <%= node['cloud']['public_ipv4'] %>
+disabled: <%= node['railsstack']['cloud_monitoring']['agent_mysql']['disabled'] %>
+period: <%= node['railsstack']['cloud_monitoring']['agent_mysql']['period'] %>
+timeout: <%= node['railsstack']['cloud_monitoring']['agent_mysql']['timeout'] %>
+details:
+  host: localhost
+  port: <%= node['mysql']['port'] %>
+  username: <%= node['railsstack']['cloud_monitoring']['agent_mysql']['user'] %>
+  password: <%= node['railsstack']['cloud_monitoring']['agent_mysql']['password'] %>

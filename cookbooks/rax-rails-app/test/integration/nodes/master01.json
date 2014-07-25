@@ -1,0 +1,30 @@
+{
+  "name": "master-01",
+  "chef_environment": "_default",
+  "json_class": "Chef::Node",
+  "automatic": {
+    "ipaddress": "localhost",
+    "hostname": "vagrant.vm",
+    "recipes": [
+      "railsstack::mysql_base",
+      "railsstack::mysql_master"
+    ],
+    "roles": [
+      "database_master"
+    ]
+  },
+  "normal": {
+  },
+  "chef_type": "node",
+  "default": {
+  },
+  "override": {
+  },
+  "run_list": [
+    "role[database_master]"
+  ],
+  "ipaddress": "127.0.0.1",
+  "mysql": {
+    "server_repl_password": "guudpasswerd"
+  }
+}

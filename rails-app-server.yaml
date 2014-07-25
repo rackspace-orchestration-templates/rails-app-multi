@@ -1,0 +1,273 @@
+heat_template_version: 2013-05-23
+
+description: |
+  This is a Heat template to deploy a single Linux server running a rails
+  application deployed from a git repo
+
+parameters:
+
+  hostname:
+    type: string
+    default: rails
+
+  # Server settings
+  image:
+    label: Operating System
+    description: |
+      Server image used for all servers that are created as a part of this
+      deployment
+    type: string
+    default: Ubuntu 12.04 LTS (Precise Pangolin)
+    constraints:
+    - allowed_values:
+      - Ubuntu 12.04 LTS (Precise Pangolin)
+      description: Must be a supported operating system.
+
+  flavor:
+    label: Server Size
+    description: |
+      Rackspace Cloud Server flavor to use. The size is based on the amount of
+      RAM for the provisioned server.
+    type: string
+    default: 4 GB Performance
+    constraints:
+    - allowed_values:
+      - 1 GB Performance
+      - 2 GB Performance
+      - 4 GB Performance
+      - 8 GB Performance
+      - 15 GB Performance
+      - 30 GB Performance
+      - 1GB Standard Instance
+      - 2GB Standard Instance
+      - 4GB Standard Instance
+      - 8GB Standard Instance
+      - 15GB Standard Instance
+      - 30GB Standard Instance
+      description: |
+        Must be a valid Rackspace Cloud Server flavor for the region you have
+        selected to deploy into.
+
+  additional_packages:
+    label: Linux packages to install
+    description: |
+      A space-separated list of Linux packages required to build the Gems
+      your application needs. Many commonly required packages are installed
+      by default, but you should list any you need here to ensure they are
+      present.
+    type: string
+    default: mysql-devel
+
+  # Rails deployment
+  domain:
+    label: Site Domain
+    description: Domain to be used with the rails app site
+    type: string
+    default: "rails.example.com"
+    constraints:
+    - allowed_pattern: "^[a-zA-Z0-9.-]{1,255}.[a-zA-Z]{2,15}$"
+      description: Must be a valid domain name
+
+  ruby_version:
+    label: Ruby version
+    description: Ruby version to be installed
+    type: string
+    default: 2.1.2
+    constraints:
+    - allowed_values:
+      - 2.1.2
+      - 2.0.0-p481
+      - 1.9.3-p547
+
+  rails_environment:
+    label: Rails environment to deploy
+    description: Rails environment in which to deploy and run the application
+    type: string
+    default: production
+
+  rails_application_server:
+    label: Application server
+    description: Application server to host yours Rails application
+    type: string
+    default: unicorn
+    constraints:
+      - allowed_values:
+        - unicorn
+        - passenger
+
+  rails_db_type:
+    label: database server type to install
+    description: The database server to be installed
+    type: string
+    default: 'mysql'
+    constraints:
+      - allowed_values:
+        - mysql
+        - postgresql
+
+  rails_db_adapter:
+    label: Rails database adapter override
+    description: The Rails database adapter type to use if not mysql or postgresql
+    type: string
+    default: ''
+
+  rails_db_server_ip:
+    label: db_server_ip_address
+    description: the address of the db server
+    type: string
+    default: ''
+
+  database_user_password:
+    label: database user password
+    description: database user password
+    type: string
+    default: ''
+
+  rails_rake_tasks:
+    label: rake tasks to run at deploy
+    description: A space separated list of rake tasks to run at deploy time
+    type: string
+    default: db:migrate assets:precompile
+
+  rails_app_server:
+    label: application server
+    description: The software which will host your Rails application
+    type: string
+    default: unicorn
+    constraints:
+      - allowed_values:
+        - unicorn
+        - passenger
+
+  app_git_url:
+    label: git URL for application repo
+    description: A git URL pointing to a repo containing your Rails application
+    type: string
+    default: ''
+
+  app_git_revision:
+    label: git revision of application to deploy
+    description: a git branch, tag, or commit hash of the revision to deploy
+    type: string
+    default: master
+
+  app_git_deploy_key:
+    label: git deploy key for private repos
+    description: a git deploy key to use if the repo is private
+    type: string
+    default: ''
+
+  # Database and system user configuration
+  database_name:
+    description: Rails application database name
+    type: string
+    default: railsapp_db
+    constraints:
+    - allowed_pattern: "^[0-9a-zA-Z$_]{1,64}$"
+      description: |
+        Maximum length of 64 characters, may only contain letters, numbers, and
+        underscores.
+
+  database_username:
+    label: Username
+    description: Database login for your Rails application
+    type: string
+    default: railsapp_user
+    constraints:
+    - allowed_pattern: "^(.){1,16}$"
+      description: |
+        Must be shorter than 16 characters, this is due to MySQL's maximum
+        username length.
+
+  rails_secret_key_base:
+    label: Railsv4 Secret Key Base Value
+    description: The base value for the Railv4 base app secret key
+    type: string
+    default: ''
+
+  ssh_private_key:
+    label: ssh private key
+    description: ssh private key
+    type: string
+    default: ''
+
+  ssh_key_name:
+    label: ssh key name
+    description: ssh key name
+    type: string
+    default: ''
+
+  kitchen:
+    description: "URL for a git repo containing required cookbooks"
+    type: string
+    default: https://github.com/JasonBoyles/rails-app-single.git
+
+  chef_version:
+    description: Version of chef client to use
+    type: string
+    default: 11.12.8
+
+resources:
+
+  # Server resources
+  rails_server:
+    type: "Rackspace::Cloud::Server"
+    properties:
+      name: rails
+      flavor: { get_param: flavor }
+      image: { get_param: image }
+      key_name: { get_param: ssh_key_name }
+      metadata:
+        rax-heat: { get_param: "OS::stack_id" }
+
+  # Chef resources
+  rails_setup:
+    type: "OS::Heat::ChefSolo"
+    depends_on: rails_server
+    properties:
+      username: root
+      private_key: { get_param: ssh_private_key }
+      host: { get_attr: [rails_server, accessIPv4] }
+      kitchen: { get_param: kitchen }
+      chef_version: { get_param: chef_version }
+      node:
+        railsstack:
+          standalone: true
+          app_server: { get_param: rails_app_server}
+          web_server: ''
+          ruby_version: { get_param: ruby_version }
+          git_url: { get_param: app_git_url }
+          git_revision: { get_param: app_git_revision }
+          git_deploy_key: { get_param: app_git_deploy_key }
+          db:
+            type: { get_param: rails_db_type }
+            hostname: { get_param: rails_db_server_ip }
+            user_id: { get_param: database_username }
+            user_password: { get_param: database_user_password }
+          rails:
+            db_adapter: { get_param: rails_db_adapter }
+            rake_tasks: { get_param: rails_rake_tasks }
+            secret_key_base: { get_param: rails_secret_key_base }
+        build-essential:
+          compile_time: true
+        run_list: ["recipe[apt]",
+                   "recipe[build-essential]",
+                   "recipe[rax-rails-app::heat_deploy_app]"
+                  ]
+
+outputs:
+  accessIPv4:
+    value: { get_attr: [rails_server, accessIPv4] }
+    description: "Server public IP"
+
+  privateIPv4:
+    value: { get_attr: [rails_server, privateIPv4] }
+    description: "Server private IP"
+
+  rails_app_url:
+    value:
+      str_replace:
+        template: "http://%server_ip%"
+        params:
+          "%server_ip%": { get_attr: [ rails_server, accessIPv4 ] }
+    description: URL for accessing your Rails application

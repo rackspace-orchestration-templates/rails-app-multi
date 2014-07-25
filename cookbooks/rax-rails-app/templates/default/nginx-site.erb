@@ -1,0 +1,21 @@
+upstream unicorn_server {
+    server unix:<%= node['railsstack']['socket_path'] %>;
+}
+
+server {
+  listen   80;
+  server_name  ruby-app;
+  root <%= File.join(node['railsstack']['user_home'], node['railsstack']['app_name'], 'current',
+                     'public') %>;
+
+  access_log  <%= File.join(node['nginx']['log_dir'], 'access.log') %> combined;
+  location / {
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Host $http_host;
+    proxy_redirect off;
+    if (!-f $request_filename) {
+      proxy_pass http://unicorn_server;
+      break;
+    }
+  }
+}

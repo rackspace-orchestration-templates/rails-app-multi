@@ -1,0 +1,8 @@
+production:
+  adapter: <%= node['railsstack']['rails']['db_adapter'] == 'mysql2' ? 'mysql2' : @database_type %>
+  hostname: <%= @database_hostname %>
+  database: <%= @app_database_name %>
+  username: <%= @rails_app_db_username %>
+  password: <%= @rails_app_db_password %>
+  pool: 5
+  timeout: 5000

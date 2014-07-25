@@ -1,0 +1,10 @@
+{
+  "name": "mysql-01",
+  "chef_environment": "_default",
+  "json_class": "Chef::Node",
+  "chef_type": "node",
+  "ipaddress": "192.168.0.22",
+  "run_list": [
+    "recipe[railsstack::mysql_base]"
+  ]
+}
