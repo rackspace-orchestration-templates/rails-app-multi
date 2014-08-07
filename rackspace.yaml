@@ -18,4 +18,53 @@ abstract: |
   incurring medium to high traffic scenarios. This deployment is easily
   scalable and is appropriate for high traffic events.
 instructions: |
-  Work in progress
+  #### Getting started
+
+  Your application should be available on port 80 of each server, and of the
+  load balancer this deployment creates.
+
+  #### Where the application is deployed
+
+  Your application is deployed [Capistrano](http://capistranorb.com/)-style
+  into the home directory of the rails user in a directory based on the name
+  of the git repo. As an example, when deploying from the repo
+  `http://github.com/MyUser/myrepo.git` the deployment for the user id
+  `rails` is placed in the following directory path:
+
+    `/home/rails/myrepo/`
+
+  Within this directory are two other directories, `shared` and `releases`,
+  along with a symbolic link, `current`, to the deployed revision--
+  `current` is the directory from which the application runs. The deployed
+  revision will be cloned into `releases` in a directory named for
+  the commit hash of the reference supplied. The `shared` directory contains
+  files which may be common across releases, such as Gems and static assets
+  produced by `rake assets:precompile`.
+
+  #### Gems
+
+  Gem dependencies are installed by running `bundle install --deployment`
+  in the `current` directory. This requires a `Gemfile.lock` file in the root
+  of the application repo.
+
+  #### `rake` tasks
+
+  Two rake tasks are run at deployment time: `rake db:migrate` followed by
+  `rake assets:precompile`. Additional rake tasks will be run if provided in
+  the `rails_rake_tasks` parameter.
+
+  #### Unicorn
+
+  If you are using unicorn it must be declared in the application's Gemfile.
+
+  A unicorn.rb file is generated and placed in the application's
+  config directory (which is linked into the current release deployment
+  directory) along with a `database.yml` file configured to reference
+  the deployment's database server.
+
+  #### Logging in via SSH
+  The private key provided in the passwords section can be used to login as
+  root via SSH. We have an article on how to use these keys with [Mac OS X and
+  Linux](http://www.rackspace.com/knowledge_center/article/logging-in-with-a-ssh-private-key-on-linuxmac)
+  as well as [Windows using
+  PuTTY](http://www.rackspace.com/knowledge_center/article/logging-in-with-a-ssh-private-key-on-windows).
