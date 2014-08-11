@@ -13,6 +13,7 @@ parameter_groups:
 
 - label: Database Server Settings
   parameters:
+  - rails_db_type
   - db_flavor
   - database_name
   - database_username
@@ -23,8 +24,8 @@ parameter_groups:
   - additional_packages
   - ruby_version
   - rails_environment
-  - rails_db_type
   - rails_rake_tasks
+  - rails_app_server
   - app_git_url
   - app_git_revision
   - app_git_deploy_key
