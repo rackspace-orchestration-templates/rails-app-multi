@@ -385,6 +385,7 @@ resources:
           chef_version: { get_param: chef_version }
           rails_app_server: { get_param: rails_app_server}
           ruby_version: { get_param: ruby_version }
+          rails_environment: { get_param: rails_environment }
           app_git_url: { get_param: app_git_url }
           app_git_revision: { get_param: app_git_revision }
           app_git_deploy_key: { get_param: app_git_deploy_key }

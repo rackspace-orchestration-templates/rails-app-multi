@@ -245,6 +245,7 @@ resources:
             user_id: { get_param: database_username }
             user_password: { get_param: database_user_password }
           rails:
+            environment: { get_param: rails_environment }
             db_adapter: { get_param: rails_db_adapter }
             rake_tasks: { get_param: rails_rake_tasks }
             secret_key_base: { get_param: rails_secret_key_base }
