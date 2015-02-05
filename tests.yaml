@@ -15,6 +15,7 @@ test-cases:
             key_filename: tmp/private_key
             hosts: { get_output: server_public_ips } # Fetch from output-list of stack
             tasks:
+              - artifacts
               - check_app
             abort_on_prompts: True
             connection_attempts: 3
@@ -30,6 +31,7 @@ test-cases:
             key_filename: tmp/private_key
             hosts: { get_output: database_server_ip } # Fetch from output-list of stack
             tasks:
+              - artifacts
               - check_db_mysql
             abort_on_prompts: True
             connection_attempts: 3
