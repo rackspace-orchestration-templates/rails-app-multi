@@ -211,7 +211,7 @@ resources:
 
   # Server resources
   rails_server:
-    type: "Rackspace::Cloud::Server"
+    type: "OS::Nova::Server"
     properties:
       name: rails
       flavor: { get_param: flavor }
@@ -262,7 +262,7 @@ outputs:
     description: "Server public IP"
 
   privateIPv4:
-    value: { get_attr: [rails_server, privateIPv4] }
+    value: { get_attr: [rails_server, networks, private, 0] }
     description: "Server private IP"
 
   rails_app_url:
