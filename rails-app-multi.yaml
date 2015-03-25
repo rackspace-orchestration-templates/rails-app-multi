@@ -330,7 +330,7 @@ resources:
         rax-heat: { get_param: "OS::stack_id" }
 
   rails_db_server:
-    type: "Rackspace::Cloud::Server"
+    type: "OS::Nova::Server"
     properties:
       name: railsdb
       flavor: { get_param: db_flavor }
@@ -356,7 +356,7 @@ resources:
             user_id: { get_param: database_username }
             user_password: { get_resource: database_user_password }
         mysql:
-          bind_address: { get_attr: [rails_db_server, privateIPv4] }
+          bind_address: { get_attr: [rails_db_server, networks, private, 0] }
           server_root_password: { get_attr: [db_admin_password, value] }
           server_repl_password: { get_attr: [mysql_repl_password, value] }
           server_debian_password: { get_attr: [mysql_debian_password, value] }
@@ -392,7 +392,7 @@ resources:
           app_git_revision: { get_param: app_git_revision }
           app_git_deploy_key: { get_param: app_git_deploy_key }
           rails_db_type: { get_param: rails_db_type }
-          rails_db_server_ip: { get_attr: [rails_db_server, privateIPv4] }
+          rails_db_server_ip: { get_attr: [rails_db_server, networks, private, 0] }
           database_username: { get_param: database_username }
           database_user_password: { get_resource: database_user_password }
           rails_db_adapter: { get_param: rails_db_adapter }
