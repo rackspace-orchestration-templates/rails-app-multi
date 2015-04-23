@@ -381,6 +381,7 @@ resources:
         type: { get_param: child_template }
         properties:
           hostname: { get_param: server_hostnames }
+          flavor: { get_param: flavor }
           ssh_key_name: { get_resource: ssh_key }
           ssh_private_key: { get_attr: [ssh_key, private_key] }
           kitchen: { get_param: kitchen }
