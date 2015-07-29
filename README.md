@@ -1,3 +1,4 @@
+[![Circle CI](https://circleci.com/gh/rackspace-orchestration-templates/rails-app-multi/tree/master.png?style=shield)](https://circleci.com/gh/rackspace-orchestration-templates/rails-app-multi)
 Description
 ===========
 
