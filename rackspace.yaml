@@ -69,3 +69,10 @@ instructions: |
   as well as [Windows using
   PuTTY](http://www.rackspace.com/knowledge_center/article/logging-in-with-a-ssh-private-key-on-windows).
 user-input-required: true
+description: |
+  Multiple load balanced Linux servers running [Rails](http://rubyonrails.org/)
+  and a backend database server running [MySQL 5.5](http://www.mysql.com/) or
+  [Postgres 9.1](http://www.postgresql.org/). This deployment is intended for
+  development and production use cases incurring medium to high traffic
+  scenarios. This deployment is easily scalable and is appropriate for high
+  traffic events.
