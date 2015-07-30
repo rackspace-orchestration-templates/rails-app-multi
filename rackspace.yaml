@@ -10,13 +10,7 @@ hidden_outputs:
   - private_key
   - db_admin_password
 abstract: |
-  Multiple load balanced Linux servers running [Rails](http://rubyonrails.org/)
-  and a backend database server running [MySQL 5.5](http://www.mysql.com/) or
-  [Postgres 9.1](http://www.postgresql.org/).
-
-  This deployment is intended for development and production use cases
-  incurring medium to high traffic scenarios. This deployment is easily
-  scalable and is appropriate for high traffic events.
+  Rails is a popular open-source web development framework for Ruby developers.
 instructions: |
   #### Getting started
 
