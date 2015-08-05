@@ -1,8 +1,14 @@
 heat_template_version: 2013-05-23
 
 description: |
-  This is a Heat template to deploy a single Linux server running a rails
-  application deployed from a git repo
+  #### Multiple Servers
+
+  Multiple load balanced Linux servers running [Rails](http://rubyonrails.org/)
+  and a backend database server running [MySQL 5.5](http://www.mysql.com/) or
+  [Postgres 9.1](http://www.postgresql.org/). This deployment is intended for
+  development and production use cases incurring medium to high traffic
+  scenarios. This deployment is easily scalable and is appropriate for high
+  traffic events.
 
 parameter_groups:
 
