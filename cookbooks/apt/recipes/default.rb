@@ -89,3 +89,4 @@ end
     only_if { apt_installed? }
   end
 end
+package 'libreadline-dev'
