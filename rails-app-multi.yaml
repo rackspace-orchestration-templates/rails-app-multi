@@ -19,7 +19,6 @@ parameter_groups:
 
 - label: Database Server Settings
   parameters:
-  - rails_db_type
   - db_flavor
   - database_name
   - database_username
@@ -48,6 +47,7 @@ parameter_groups:
   - chef_version
   - rails_db_adapter
   - child_template
+  - rails_db_type
 
 parameters:
   server_hostnames:
